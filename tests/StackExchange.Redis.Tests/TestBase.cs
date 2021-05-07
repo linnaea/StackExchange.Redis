@@ -287,7 +287,7 @@ namespace StackExchange.Redis.Tests
 
                 if (Debugger.IsAttached)
                 {
-                    syncTimeout = int.MaxValue;
+                    syncTimeout = ushort.MaxValue;
                 }
 
                 if (channelPrefix != null) config.ChannelPrefix = channelPrefix;

@@ -26,15 +26,15 @@ namespace StackExchange.Redis.Tests
                 RedisKey key = Me();
                 var db = conn.GetDatabase();
                 db.KeyDelete(key);
-                var a = db.SetAddAsync(key, "a");
-                var b = db.SetAddAsync(key, "b");
+                var a = db.SetAddAsync(key, "a").AsTask();
+                var b = db.SetAddAsync(key, "b").AsTask();
 
                 Assert.True(conn.Wait(a));
                 Assert.True(conn.Wait(b));
 
                 conn.AllowConnect = false;
                 server.SimulateConnectionFailure();
-                var c = db.SetAddAsync(key, "c");
+                var c = db.SetAddAsync(key, "c").AsTask();
 
                 Assert.True(c.IsFaulted, "faulted");
                 var ex = c.Exception.InnerExceptions.Single();

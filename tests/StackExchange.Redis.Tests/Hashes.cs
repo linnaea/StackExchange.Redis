@@ -27,8 +27,8 @@ namespace StackExchange.Redis.Tests
                 var bTasks = new Task<long>[iterations];
                 for (int i = 1; i < iterations + 1; i++)
                 {
-                    aTasks[i - 1] = conn.HashIncrementAsync(key, "a", 1);
-                    bTasks[i - 1] = conn.HashIncrementAsync(key, "b", -1);
+                    aTasks[i - 1] = conn.HashIncrementAsync(key, "a", 1).AsTask();
+                    bTasks[i - 1] = conn.HashIncrementAsync(key, "b", -1).AsTask();
                 }
                 await Task.WhenAll(bTasks).ForAwait();
                 for (int i = 1; i < iterations + 1; i++)
@@ -135,8 +135,8 @@ namespace StackExchange.Redis.Tests
             {
                 var conn = muxer.GetDatabase();
                 conn.KeyDeleteAsync("keynotexist");
-                var result1 = conn.Wait(conn.HashIncrementAsync("keynotexist", "fieldnotexist", 1));
-                var result2 = conn.Wait(conn.HashIncrementAsync("keynotexist", "anotherfieldnotexist", 1));
+                var result1 = conn.Wait(conn.HashIncrementAsync("keynotexist", "fieldnotexist", 1).AsTask());
+                var result2 = conn.Wait(conn.HashIncrementAsync("keynotexist", "anotherfieldnotexist", 1).AsTask());
                 Assert.Equal(1, result1);
                 Assert.Equal(1, result2);
             }
@@ -155,8 +155,8 @@ namespace StackExchange.Redis.Tests
                 var bTasks = new Task<double>[1000];
                 for (int i = 1; i < 1001; i++)
                 {
-                    aTasks[i-1] = conn.HashIncrementAsync(key, "a", 1.0);
-                    bTasks[i-1] = conn.HashIncrementAsync(key, "b", -1.0);
+                    aTasks[i-1] = conn.HashIncrementAsync(key, "a", 1.0).AsTask();
+                    bTasks[i-1] = conn.HashIncrementAsync(key, "b", -1.0).AsTask();
                 }
                 await Task.WhenAll(bTasks).ForAwait();
                 for (int i = 1; i < 1001; i++)
@@ -406,7 +406,7 @@ namespace StackExchange.Redis.Tests
                 var conn = muxer.GetDatabase();
                 var hashkey = Me();
                 _ = conn.KeyDeleteAsync(hashkey).ForAwait();
-                var ex0 = conn.HashExistsAsync(hashkey, "field").ForAwait();
+                var ex0 = conn.HashExistsAsync(hashkey, "field").AsTask().ForAwait();
                 _ = conn.HashSetAsync(hashkey, "field", "value").ForAwait();
                 var ex1 = conn.HashExistsAsync(hashkey, "field").ForAwait();
                 _ = conn.HashDeleteAsync(hashkey, "field").ForAwait();
@@ -532,12 +532,12 @@ namespace StackExchange.Redis.Tests
                 var hashkey = Me();
                 conn.KeyDeleteAsync(hashkey);
 
-                var result0 = conn.HashGetAllAsync(hashkey);
+                var result0 = conn.HashGetAllAsync(hashkey).AsTask();
 
                 conn.HashSetAsync(hashkey, "foo", "abc");
                 conn.HashSetAsync(hashkey, "bar", "def");
 
-                var result1 = conn.HashGetAllAsync(hashkey);
+                var result1 = conn.HashGetAllAsync(hashkey).AsTask();
 
                 Assert.Empty(muxer.Wait(result0));
                 var result = muxer.Wait(result1).ToStringDictionary();
@@ -564,7 +564,7 @@ namespace StackExchange.Redis.Tests
                 };
                 conn.HashSetAsync(hashkey, data).ForAwait();
 
-                var result1 = conn.Wait(conn.HashGetAllAsync(hashkey));
+                var result1 = conn.Wait(conn.HashGetAllAsync(hashkey).AsTask());
 
                 Assert.Empty(result0.Result);
                 var result = result1.ToStringDictionary();

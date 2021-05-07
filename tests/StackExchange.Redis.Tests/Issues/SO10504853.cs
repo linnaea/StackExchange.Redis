@@ -49,7 +49,7 @@ namespace StackExchange.Redis.Tests.Issues
                 conn.HashSetAsync(key, "something else", "abc");
                 conn.HashSetAsync(key, "priority", task.priority.ToString());
 
-                var taskResult = conn.HashGetAsync(key, "priority");
+                var taskResult = conn.HashGetAsync(key, "priority").AsTask();
 
                 conn.Wait(taskResult);
 
@@ -73,7 +73,7 @@ namespace StackExchange.Redis.Tests.Issues
                     conn.StringSetAsync(key, "not a hash");
                     conn.HashSetAsync(key, "priority", task.priority.ToString());
 
-                    var taskResult = conn.HashGetAsync(key, "priority");
+                    var taskResult = conn.HashGetAsync(key, "priority").AsTask();
 
                     try
                     {

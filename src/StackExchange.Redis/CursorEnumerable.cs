@@ -70,7 +70,7 @@ namespace StackExchange.Redis
         {
             activeCursor = obj;
             message = CreateMessage(cursor);
-            return redis.ExecuteAsync(message, Processor, server);
+            return redis.ExecuteAsync(message, Processor, server).AsTask();
         }
 
         /// <summary>
@@ -129,7 +129,7 @@ namespace StackExchange.Redis
                 Dispose();
                 return default;
             }
-            
+
 
             object IEnumerator.Current => _pageOversized[_pageOffset];
 
@@ -330,13 +330,13 @@ namespace StackExchange.Redis
             get { var tmp = activeCursor; return tmp?.PageOffset ?? initialOffset; }
         }
 
-        internal static CursorEnumerable<T> From(RedisBase redis, ServerEndPoint server, Task<T[]> pending, int pageOffset)
-            => new SingleBlockEnumerable(redis, server, pending, pageOffset);
+        internal static CursorEnumerable<T> From(RedisBase redis, ServerEndPoint server, ValueTask<T[]> pending, int pageOffset)
+            => new SingleBlockEnumerable(redis, server, pending.AsTask(), pageOffset);
 
         class SingleBlockEnumerable : CursorEnumerable<T>
         {
             private readonly Task<T[]> _pending;
-            public SingleBlockEnumerable(RedisBase redis, ServerEndPoint server, 
+            public SingleBlockEnumerable(RedisBase redis, ServerEndPoint server,
                 Task<T[]> pending, int pageOffset) : base(redis, server, 0, int.MaxValue, 0, pageOffset, default)
             {
                 _pending = pending;

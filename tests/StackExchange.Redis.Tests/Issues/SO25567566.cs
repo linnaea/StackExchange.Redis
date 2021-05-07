@@ -29,7 +29,7 @@ namespace StackExchange.Redis.Tests.Issues
             var timeout = Task.Delay(5000);
             var key = Me();
             var key2 = key + "2";
-            var len = db.ListLengthAsync(key);
+            var len = db.ListLengthAsync(key).AsTask();
 
             if (await Task.WhenAny(timeout, len).ForAwait() != len)
             {
@@ -41,12 +41,12 @@ namespace StackExchange.Redis.Tests.Issues
                 db.ListRightPush(key, "foo", flags: CommandFlags.FireAndForget);
             }
             var tran = db.CreateTransaction();
-            var x = tran.ListRightPopLeftPushAsync(key, key2);
-            var y = tran.SetAddAsync(key + "set", "bar");
-            var z = tran.KeyExpireAsync(key2, TimeSpan.FromSeconds(60));
+            var x = tran.ListRightPopLeftPushAsync(key, key2).AsTask();
+            var y = tran.SetAddAsync(key + "set", "bar").AsTask();
+            var z = tran.KeyExpireAsync(key2, TimeSpan.FromSeconds(60)).AsTask();
             timeout = Task.Delay(5000);
 
-            var exec = tran.ExecuteAsync();
+            var exec = tran.ExecuteAsync().AsTask();
             // SWAP THESE TWO
             bool ok = await Task.WhenAny(exec, timeout).ForAwait() == exec;
             //bool ok = true;

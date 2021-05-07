@@ -109,7 +109,7 @@ namespace StackExchange.Redis.Tests
 
                         for (var j = 0; j < CountPer; j++)
                         {
-                            var task = db.StringSetAsync(prefix + j, "" + j);
+                            var task = db.StringSetAsync(prefix + j, "" + j).AsTask();
                             threadTasks.Add(task);
                         }
 
@@ -236,7 +236,7 @@ namespace StackExchange.Redis.Tests
                 foreach (var i in Enumerable.Range(0, OuterLoop))
                 {
                     var t =
-                        db.StringSetAsync(prefix + i, "bar" + i)
+                        db.StringSetAsync(prefix + i, "bar" + i).AsTask()
                           .ContinueWith(
                             async _ => (string)(await db.StringGetAsync(prefix + i).ForAwait())
                           );
@@ -293,7 +293,7 @@ namespace StackExchange.Redis.Tests
 
                         for (var j = 0; j < 1000; j++)
                         {
-                            var task = db.StringSetAsync(prefix + j, "" + j);
+                            var task = db.StringSetAsync(prefix + j, "" + j).AsTask();
                             threadTasks.Add(task);
                         }
 
@@ -338,7 +338,7 @@ namespace StackExchange.Redis.Tests
                         for (var j = 0; j < 1000; j++)
                         {
                             var task = db.StringSetAsync(prefix + j, "" + j);
-                            threadTasks.Add(task);
+                            threadTasks.Add(task.AsTask());
                         }
 
                         Task.WaitAll(threadTasks.ToArray());

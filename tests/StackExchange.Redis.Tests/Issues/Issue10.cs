@@ -20,7 +20,7 @@ namespace StackExchange.Redis.Tests.Issues
                 conn.ListLeftPushAsync(key, "ghi"); // "ghi", "def", "abc",
                 conn.ListSetByIndexAsync(key, 1, "jkl"); // "ghi", "jkl", "abc"
 
-                var contents = conn.Wait(conn.ListRangeAsync(key, 0, -1));
+                var contents = conn.Wait(conn.ListRangeAsync(key, 0, -1).AsTask());
                 Assert.Equal(3, contents.Length);
                 Assert.Equal("ghi", contents[0]);
                 Assert.Equal("jkl", contents[1]);

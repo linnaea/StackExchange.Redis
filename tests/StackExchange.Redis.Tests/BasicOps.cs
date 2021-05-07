@@ -54,7 +54,7 @@ namespace StackExchange.Redis.Tests
                 var tasks = new Task<TimeSpan>[100];
                 for (int i = 0; i < tasks.Length; i++)
                 {
-                    tasks[i] = conn.PingAsync();
+                    tasks[i] = conn.PingAsync().AsTask();
                 }
                 await Task.WhenAll(tasks).ForAwait();
                 Assert.True(tasks[0].Result.TotalMilliseconds > 0);
@@ -155,9 +155,9 @@ namespace StackExchange.Redis.Tests
                 RedisKey key = Me();
                 var d0 = conn.KeyDeleteAsync(key);
                 var d1 = conn.KeyDeleteAsync(key);
-                var g1 = conn.StringGetAsync(key);
+                var g1 = conn.StringGetAsync(key).AsTask();
                 var s1 = conn.StringSetAsync(key, "123");
-                var g2 = conn.StringGetAsync(key);
+                var g2 = conn.StringGetAsync(key).AsTask();
                 var d2 = conn.KeyDeleteAsync(key);
 
                 await d0;
@@ -314,7 +314,7 @@ namespace StackExchange.Redis.Tests
                 RedisKey key = Me();
                 conn.KeyDelete(key, CommandFlags.FireAndForget);
                 var nix = conn.KeyExistsAsync(key).ForAwait();
-                var a = conn.StringGetAsync(key).ForAwait();
+                var a = conn.StringGetAsync(key).AsTask().ForAwait();
                 var b = conn.StringIncrementAsync(key).ForAwait();
                 var c = conn.StringGetAsync(key).ForAwait();
                 var d = conn.StringIncrementAsync(key, 10).ForAwait();

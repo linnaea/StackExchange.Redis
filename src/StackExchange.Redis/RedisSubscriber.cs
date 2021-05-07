@@ -407,7 +407,7 @@ namespace StackExchange.Redis
             return ExecuteSync(msg, ResultProcessor.ConnectionIdentity);
         }
 
-        public Task<EndPoint> IdentifyEndpointAsync(RedisChannel channel, CommandFlags flags = CommandFlags.None)
+        public ValueTask<EndPoint> IdentifyEndpointAsync(RedisChannel channel, CommandFlags flags = CommandFlags.None)
         {
             var msg = Message.Create(-1, flags, RedisCommand.PUBSUB, RedisLiterals.NUMSUB, channel);
             msg.SetInternalCall();
@@ -425,7 +425,7 @@ namespace StackExchange.Redis
             return ExecuteSync(msg, ResultProcessor.ResponseTimer, server);
         }
 
-        public override Task<TimeSpan> PingAsync(CommandFlags flags = CommandFlags.None)
+        public override ValueTask<TimeSpan> PingAsync(CommandFlags flags = CommandFlags.None)
         {
             var msg = CreatePingMessage(flags, out var server);
             return ExecuteAsync(msg, ResultProcessor.ResponseTimer, server);
@@ -460,7 +460,7 @@ namespace StackExchange.Redis
             return ExecuteSync(msg, ResultProcessor.Int64);
         }
 
-        public Task<long> PublishAsync(RedisChannel channel, RedisValue message, CommandFlags flags = CommandFlags.None)
+        public ValueTask<long> PublishAsync(RedisChannel channel, RedisValue message, CommandFlags flags = CommandFlags.None)
         {
             if (channel.IsNullOrEmpty) throw new ArgumentNullException(nameof(channel));
             var msg = Message.Create(-1, flags, RedisCommand.PUBLISH, channel, message);

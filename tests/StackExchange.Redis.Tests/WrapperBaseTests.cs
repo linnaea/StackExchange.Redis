@@ -268,7 +268,7 @@ namespace StackExchange.Redis.Tests
         [Fact]
         public Task KeyRandomAsync()
         {
-            return Assert.ThrowsAsync<NotSupportedException>(() => wrapper.KeyRandomAsync());
+            return Assert.ThrowsAsync<NotSupportedException>(() => wrapper.KeyRandomAsync().AsTask());
         }
 
         [Fact]

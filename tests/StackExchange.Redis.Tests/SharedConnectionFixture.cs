@@ -256,7 +256,7 @@ namespace StackExchange.Redis.Tests
                 return _inner.PublishReconfigure(flags);
             }
 
-            public Task<long> PublishReconfigureAsync(CommandFlags flags = CommandFlags.None)
+            public ValueTask<long> PublishReconfigureAsync(CommandFlags flags = CommandFlags.None)
             {
                 return _inner.PublishReconfigureAsync(flags);
             }

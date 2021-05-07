@@ -12,7 +12,7 @@ namespace StackExchange.Redis
     /// Public fields and properties of the passed in object are treated as parameters.
     /// </para>
     /// <para>
-    /// Parameters of type RedisKey are sent to Redis as KEY (https://redis.io/commands/eval) in addition to arguments, 
+    /// Parameters of type RedisKey are sent to Redis as KEY (https://redis.io/commands/eval) in addition to arguments,
     /// so as to play nicely with Redis Cluster.
     /// </para>
     /// <para>All members of this class are thread safe.</para>
@@ -156,7 +156,7 @@ namespace StackExchange.Redis
         /// <param name="ps">The parameter object to use.</param>
         /// <param name="withKeyPrefix">The key prefix to use, if any.</param>
         /// <param name="flags">The command flags to use.</param>
-        public Task<RedisResult> EvaluateAsync(IDatabaseAsync db, object ps = null, RedisKey? withKeyPrefix = null, CommandFlags flags = CommandFlags.None)
+        public ValueTask<RedisResult> EvaluateAsync(IDatabaseAsync db, object ps = null, RedisKey? withKeyPrefix = null, CommandFlags flags = CommandFlags.None)
         {
             ExtractParameters(ps, withKeyPrefix, out RedisKey[] keys, out RedisValue[] args);
             return db.ScriptEvaluateAsync(ExecutableScript, keys, args, flags);
@@ -191,7 +191,7 @@ namespace StackExchange.Redis
         /// </summary>
         /// <param name="server">The server to load the script on.</param>
         /// <param name="flags">The command flags to use.</param>
-        public async Task<LoadedLuaScript> LoadAsync(IServer server, CommandFlags flags = CommandFlags.None)
+        public async ValueTask<LoadedLuaScript> LoadAsync(IServer server, CommandFlags flags = CommandFlags.None)
         {
             if ((flags & CommandFlags.FireAndForget) != 0)
             {
@@ -218,7 +218,7 @@ namespace StackExchange.Redis
     /// Public fields and properties of the passed in object are treated as parameters.
     /// </para>
     /// <para>
-    /// Parameters of type RedisKey are sent to Redis as KEY (https://redis.io/commands/eval) in addition to arguments, 
+    /// Parameters of type RedisKey are sent to Redis as KEY (https://redis.io/commands/eval) in addition to arguments,
     /// so as to play nicely with Redis Cluster.
     /// </para>
     /// <para>All members of this class are thread safe.</para>
@@ -278,7 +278,7 @@ namespace StackExchange.Redis
         /// <param name="ps">The parameter object to use.</param>
         /// <param name="withKeyPrefix">The key prefix to use, if any.</param>
         /// <param name="flags">The command flags to use.</param>
-        public Task<RedisResult> EvaluateAsync(IDatabaseAsync db, object ps = null, RedisKey? withKeyPrefix = null, CommandFlags flags = CommandFlags.None)
+        public ValueTask<RedisResult> EvaluateAsync(IDatabaseAsync db, object ps = null, RedisKey? withKeyPrefix = null, CommandFlags flags = CommandFlags.None)
         {
             Original.ExtractParameters(ps, withKeyPrefix, out RedisKey[] keys, out RedisValue[] args);
             return db.ScriptEvaluateAsync(Hash, keys, args, flags);

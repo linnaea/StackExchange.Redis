@@ -39,7 +39,7 @@ namespace StackExchange.Redis.Tests
                 asyncFaF = (int)timer.ElapsedMilliseconds;
                 var final = new Task<RedisValue>[5];
                 for (int db = 0; db < 5; db++)
-                    final[db] = muxer.GetDatabase(db).StringGetAsync(key);
+                    final[db] = muxer.GetDatabase(db).StringGetAsync(key).AsTask();
                 muxer.WaitAll(final);
                 timer.Stop();
                 asyncTimer = (int)timer.ElapsedMilliseconds;

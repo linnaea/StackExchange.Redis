@@ -42,13 +42,13 @@ namespace StackExchange.Redis.Tests
                 conn.StringSetAsync(key, "batch-sent");
                 var tasks = new List<Task>();
                 var batch = conn.CreateBatch();
-                tasks.Add(batch.KeyDeleteAsync(key));
-                tasks.Add(batch.SetAddAsync(key, "a"));
-                tasks.Add(batch.SetAddAsync(key, "b"));
-                tasks.Add(batch.SetAddAsync(key, "c"));
+                tasks.Add(batch.KeyDeleteAsync(key).AsTask());
+                tasks.Add(batch.SetAddAsync(key, "a").AsTask());
+                tasks.Add(batch.SetAddAsync(key, "b").AsTask());
+                tasks.Add(batch.SetAddAsync(key, "c").AsTask());
                 batch.Execute();
 
-                var result = conn.SetMembersAsync(key);
+                var result = conn.SetMembersAsync(key).AsTask();
                 tasks.Add(result);
                 Task.WhenAll(tasks.ToArray());
 

@@ -31,6 +31,6 @@ namespace StackExchange.Redis
         /// Execute the batch operation, sending all queued commands to the server.
         /// </summary>
         /// <param name="flags">The command flags to use.</param>
-        Task<bool> ExecuteAsync(CommandFlags flags = CommandFlags.None);
+        ValueTask<bool> ExecuteAsync(CommandFlags flags = CommandFlags.None);
     }
 }

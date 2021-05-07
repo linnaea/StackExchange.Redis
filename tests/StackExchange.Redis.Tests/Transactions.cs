@@ -60,8 +60,8 @@ namespace StackExchange.Redis.Tests
 
                 var tran = db.CreateTransaction();
                 var cond = tran.AddCondition(demandKeyExists ? Condition.KeyExists(key2) : Condition.KeyNotExists(key2));
-                var incr = tran.StringIncrementAsync(key);
-                var exec = tran.ExecuteAsync();
+                var incr = tran.StringIncrementAsync(key).AsTask();
+                var exec = tran.ExecuteAsync().AsTask();
                 var get = db.StringGet(key);
 
                 Assert.Equal(expectTranResult, await exec);
@@ -109,8 +109,8 @@ namespace StackExchange.Redis.Tests
 
                 var tran = db.CreateTransaction();
                 var cond = tran.AddCondition(expectEqual ? Condition.StringEqual(key2, expected) : Condition.StringNotEqual(key2, expected));
-                var incr = tran.StringIncrementAsync(key);
-                var exec = tran.ExecuteAsync();
+                var incr = tran.StringIncrementAsync(key).AsTask();
+                var exec = tran.ExecuteAsync().AsTask();
                 var get = db.StringGet(key);
 
                 Assert.Equal(expectTranResult, await exec);
@@ -151,8 +151,8 @@ namespace StackExchange.Redis.Tests
 
                 var tran = db.CreateTransaction();
                 var cond = tran.AddCondition(demandKeyExists ? Condition.HashExists(key2, hashField) : Condition.HashNotExists(key2, hashField));
-                var incr = tran.StringIncrementAsync(key);
-                var exec = tran.ExecuteAsync();
+                var incr = tran.StringIncrementAsync(key).AsTask();
+                var exec = tran.ExecuteAsync().AsTask();
                 var get = db.StringGet(key);
 
                 Assert.Equal(expectTranResult, await exec);
@@ -201,8 +201,8 @@ namespace StackExchange.Redis.Tests
 
                 var tran = db.CreateTransaction();
                 var cond = tran.AddCondition(expectEqual ? Condition.HashEqual(key2, hashField, expected) : Condition.HashNotEqual(key2, hashField, expected));
-                var incr = tran.StringIncrementAsync(key);
-                var exec = tran.ExecuteAsync();
+                var incr = tran.StringIncrementAsync(key).AsTask();
+                var exec = tran.ExecuteAsync().AsTask();
                 var get = db.StringGet(key);
 
                 Assert.Equal(expectedTranResult, await exec);
@@ -264,8 +264,8 @@ namespace StackExchange.Redis.Tests
 
                 var tran = db.CreateTransaction();
                 var cond = tran.AddCondition(demandKeyExists ? Condition.ListIndexExists(key2, 0) : Condition.ListIndexNotExists(key2, 0));
-                var push = tran.ListRightPushAsync(key, "any value");
-                var exec = tran.ExecuteAsync();
+                var push = tran.ListRightPushAsync(key, "any value").AsTask();
+                var exec = tran.ExecuteAsync().AsTask();
                 var get = db.ListGetByIndex(key, 0);
 
                 Assert.Equal(expectTranResult, await exec);
@@ -313,8 +313,8 @@ namespace StackExchange.Redis.Tests
 
                 var tran = db.CreateTransaction();
                 var cond = tran.AddCondition(expectEqual ? Condition.ListIndexEqual(key2, 0, expected) : Condition.ListIndexNotEqual(key2, 0, expected));
-                var push = tran.ListRightPushAsync(key, "any value");
-                var exec = tran.ExecuteAsync();
+                var push = tran.ListRightPushAsync(key, "any value").AsTask();
+                var exec = tran.ExecuteAsync().AsTask();
                 var get = db.ListGetByIndex(key, 0);
 
                 Assert.Equal(expectTranResult, await exec);
@@ -403,8 +403,8 @@ namespace StackExchange.Redis.Tests
 
                 var tran = db.CreateTransaction();
                 var cond = tran.AddCondition(condition);
-                var push = tran.StringSetAsync(key, "any value");
-                var exec = tran.ExecuteAsync();
+                var push = tran.StringSetAsync(key, "any value").AsTask();
+                var exec = tran.ExecuteAsync().AsTask();
                 var get = db.StringLength(key);
 
                 Assert.Equal(expectTranResult, await exec);
@@ -481,8 +481,8 @@ namespace StackExchange.Redis.Tests
 
                 var tran = db.CreateTransaction();
                 var cond = tran.AddCondition(condition);
-                var push = tran.StringSetAsync(key, "any value");
-                var exec = tran.ExecuteAsync();
+                var push = tran.StringSetAsync(key, "any value").AsTask();
+                var exec = tran.ExecuteAsync().AsTask();
                 var get = db.StringLength(key);
 
                 Assert.Equal(expectTranResult, await exec);
@@ -559,8 +559,8 @@ namespace StackExchange.Redis.Tests
 
                 var tran = db.CreateTransaction();
                 var cond = tran.AddCondition(condition);
-                var push = tran.StringSetAsync(key, "any value");
-                var exec = tran.ExecuteAsync();
+                var push = tran.StringSetAsync(key, "any value").AsTask();
+                var exec = tran.ExecuteAsync().AsTask();
                 var get = db.StringLength(key);
 
                 Assert.Equal(expectTranResult, await exec);
@@ -602,8 +602,8 @@ namespace StackExchange.Redis.Tests
 
                 var tran = db.CreateTransaction();
                 var cond = tran.AddCondition(demandKeyExists ? Condition.SetContains(key2, member) : Condition.SetNotContains(key2, member));
-                var incr = tran.StringIncrementAsync(key);
-                var exec = tran.ExecuteAsync();
+                var incr = tran.StringIncrementAsync(key).AsTask();
+                var exec = tran.ExecuteAsync().AsTask();
                 var get = db.StringGet(key);
 
                 Assert.Equal(expectTranResult, await exec);
@@ -679,8 +679,8 @@ namespace StackExchange.Redis.Tests
 
                 var tran = db.CreateTransaction();
                 var cond = tran.AddCondition(condition);
-                var push = tran.StringSetAsync(key, "any value");
-                var exec = tran.ExecuteAsync();
+                var push = tran.StringSetAsync(key, "any value").AsTask();
+                var exec = tran.ExecuteAsync().AsTask();
                 var get = db.StringLength(key);
 
                 Assert.Equal(expectTranResult, await exec);
@@ -757,8 +757,8 @@ namespace StackExchange.Redis.Tests
 
                 var tran = db.CreateTransaction();
                 var cond = tran.AddCondition(condition);
-                var push = tran.StringSetAsync(key, "any value");
-                var exec = tran.ExecuteAsync();
+                var push = tran.StringSetAsync(key, "any value").AsTask();
+                var exec = tran.ExecuteAsync().AsTask();
                 var get = db.StringLength(key);
 
                 Assert.Equal(expectTranResult, await exec);
@@ -800,8 +800,8 @@ namespace StackExchange.Redis.Tests
 
                 var tran = db.CreateTransaction();
                 var cond = tran.AddCondition(demandKeyExists ? Condition.SortedSetContains(key2, member) : Condition.SortedSetNotContains(key2, member));
-                var incr = tran.StringIncrementAsync(key);
-                var exec = tran.ExecuteAsync();
+                var incr = tran.StringIncrementAsync(key).AsTask();
+                var exec = tran.ExecuteAsync().AsTask();
                 var get = db.StringGet(key);
 
                 Assert.Equal(expectTranResult, await exec);
@@ -850,8 +850,8 @@ namespace StackExchange.Redis.Tests
 
                 var tran = db.CreateTransaction();
                 var cond = tran.AddCondition(expectEqual ? Condition.SortedSetEqual(key2, member, expected) : Condition.SortedSetNotEqual(key2, member, expected));
-                var incr = tran.StringIncrementAsync(key);
-                var exec = tran.ExecuteAsync();
+                var incr = tran.StringIncrementAsync(key).AsTask();
+                var exec = tran.ExecuteAsync().AsTask();
                 var get = db.StringGet(key);
 
                 Assert.Equal(expectedTranResult, await exec);
@@ -909,8 +909,8 @@ namespace StackExchange.Redis.Tests
 
                 var tran = db.CreateTransaction();
                 var cond = tran.AddCondition(demandScoreExists ? Condition.SortedSetScoreExists(key2, Score) : Condition.SortedSetScoreNotExists(key2, Score));
-                var incr = tran.StringIncrementAsync(key);
-                var exec = tran.ExecuteAsync();
+                var incr = tran.StringIncrementAsync(key).AsTask();
+                var exec = tran.ExecuteAsync().AsTask();
                 var get = db.StringGet(key);
 
                 Assert.Equal(expectedTranResult, await exec);
@@ -978,8 +978,8 @@ namespace StackExchange.Redis.Tests
 
                 var tran = db.CreateTransaction();
                 var cond = tran.AddCondition(expectEqual ? Condition.SortedSetScoreExists(key2, Score, expectedLength) : Condition.SortedSetScoreNotExists(key2, Score, expectedLength));
-                var incr = tran.StringIncrementAsync(key);
-                var exec = tran.ExecuteAsync();
+                var incr = tran.StringIncrementAsync(key).AsTask();
+                var exec = tran.ExecuteAsync().AsTask();
                 var get = db.StringGet(key);
 
                 Assert.Equal(expectedTranResult, await exec);
@@ -1055,8 +1055,8 @@ namespace StackExchange.Redis.Tests
 
                 var tran = db.CreateTransaction();
                 var cond = tran.AddCondition(condition);
-                var push = tran.StringSetAsync(key, "any value");
-                var exec = tran.ExecuteAsync();
+                var push = tran.StringSetAsync(key, "any value").AsTask();
+                var exec = tran.ExecuteAsync().AsTask();
                 var get = db.StringLength(key);
 
                 Assert.Equal(expectTranResult, await exec);
@@ -1089,12 +1089,12 @@ namespace StackExchange.Redis.Tests
                 Assert.False(db.KeyExists(key));
 
                 var tran = db.CreateTransaction();
-                var a = tran.StringIncrementAsync(key, 10);
-                var b = tran.StringIncrementAsync(key, 5);
-                var c = tran.StringGetAsync(key);
-                var d = tran.KeyExistsAsync(key);
-                var e = tran.KeyDeleteAsync(key);
-                var f = tran.KeyExistsAsync(key);
+                var a = tran.StringIncrementAsync(key, 10).AsTask();
+                var b = tran.StringIncrementAsync(key, 5).AsTask();
+                var c = tran.StringGetAsync(key).AsTask();
+                var d = tran.KeyExistsAsync(key).AsTask();
+                var e = tran.KeyDeleteAsync(key).AsTask();
+                var f = tran.KeyExistsAsync(key).AsTask();
                 Assert.False(a.IsCompleted);
                 Assert.False(b.IsCompleted);
                 Assert.False(c.IsCompleted);
@@ -1134,18 +1134,15 @@ namespace StackExchange.Redis.Tests
                 Assert.False(db.KeyExists(key));
 
                 var tran = db.CreateTransaction("state");
-                var a = tran.StringIncrementAsync(key, 5);
-                var b = tran.StringIncrementAsync(key, 10, CommandFlags.FireAndForget);
+                var a = tran.StringIncrementAsync(key, 5).AsTask();
+                var b = tran.StringIncrementAsync(key, 10, CommandFlags.FireAndForget).AsTask();
                 var c = tran.StringIncrementAsync(key, 15);
                 Assert.True(tran.Execute());
                 var count = (long)db.StringGet(key);
 
                 Assert.Equal(5, await a);
-                Assert.Equal("state", a.AsyncState);
                 Assert.Equal(0, await b);
-                Assert.Null(b.AsyncState);
                 Assert.Equal(30, await c);
-                Assert.Equal("state", a.AsyncState);
                 Assert.Equal(30, count);
             }
         }
@@ -1170,7 +1167,7 @@ namespace StackExchange.Redis.Tests
                 db.StringSet(key, "foo");
                 var tran = db.CreateTransaction();
                 tran.AddCondition(Condition.StringEqual(key, "foo"));
-                var pong = tran.PingAsync();
+                var pong = tran.PingAsync().AsTask();
                 Assert.False(await tran.ExecuteAsync(), "expected abort");
                 await Assert.ThrowsAsync<TaskCanceledException>(() => pong);
             }
@@ -1195,7 +1192,7 @@ namespace StackExchange.Redis.Tests
                 db.HashSet(key, "foo", "abc");
                 var tran = db.CreateTransaction();
                 tran.AddCondition(Condition.HashLengthEqual(key, 1));
-                var pong = tran.PingAsync();
+                var pong = tran.PingAsync().AsTask();
                 Assert.False(await tran.ExecuteAsync());
                 await Assert.ThrowsAsync<TaskCanceledException>(() => pong);
             }
@@ -1212,16 +1209,16 @@ namespace StackExchange.Redis.Tests
                 for (int i = 0; i < 40000; i++)
                 {
                     RedisKey key = Me();
-                    await db.KeyDeleteAsync(key);
+                    await db.KeyDeleteAsync(key).AsTask();
                     HashEntry[] hashEntries = new []
                     {
                         new HashEntry("blah", DateTime.UtcNow.ToString("R"))
                     };
                     ITransaction transaction = db.CreateTransaction();
                     transaction.AddCondition(Condition.KeyNotExists(key));
-                    Task hashSetTask = transaction.HashSetAsync(key, hashEntries);
-                    Task<bool> expireTask = transaction.KeyExpireAsync(key, TimeSpan.FromSeconds(30));
-                    bool committed = await transaction.ExecuteAsync();
+                    var hashSetTask = transaction.HashSetAsync(key, hashEntries);
+                    var expireTask = transaction.KeyExpireAsync(key, TimeSpan.FromSeconds(30));
+                    bool committed = await transaction.ExecuteAsync().AsTask();
                     if (committed)
                     {
                         if (hashSetTask.IsCompleted) hashHit++; else hashMiss++;

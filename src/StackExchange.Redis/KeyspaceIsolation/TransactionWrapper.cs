@@ -18,7 +18,7 @@ namespace StackExchange.Redis.KeyspaceIsolation
             return Inner.Execute(flags);
         }
 
-        public Task<bool> ExecuteAsync(CommandFlags flags = CommandFlags.None)
+        public ValueTask<bool> ExecuteAsync(CommandFlags flags = CommandFlags.None)
         {
             return Inner.ExecuteAsync(flags);
         }

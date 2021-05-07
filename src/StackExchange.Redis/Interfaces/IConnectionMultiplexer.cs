@@ -251,7 +251,7 @@ namespace StackExchange.Redis
         /// </summary>
         /// <param name="flags">The command flags to use.</param>
         /// <returns>The number of instances known to have received the message (however, the actual number can be higher)</returns>
-        Task<long> PublishReconfigureAsync(CommandFlags flags = CommandFlags.None);
+        ValueTask<long> PublishReconfigureAsync(CommandFlags flags = CommandFlags.None);
 
         /// <summary>
         /// Get the hash-slot associated with a given key, if applicable; this can be useful for grouping operations

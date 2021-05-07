@@ -24,7 +24,7 @@ namespace StackExchange.Redis
             return ExecuteSync(msg, ResultProcessor.ResponseTimer);
         }
 
-        public virtual Task<TimeSpan> PingAsync(CommandFlags flags = CommandFlags.None)
+        public virtual ValueTask<TimeSpan> PingAsync(CommandFlags flags = CommandFlags.None)
         {
             var msg = GetTimerMessage(flags);
             return ExecuteAsync(msg, ResultProcessor.ResponseTimer);
@@ -40,9 +40,9 @@ namespace StackExchange.Redis
 
         public void WaitAll(params Task[] tasks) => multiplexer.WaitAll(tasks);
 
-        internal virtual Task<T> ExecuteAsync<T>(Message message, ResultProcessor<T> processor, ServerEndPoint server = null)
+        internal virtual ValueTask<T> ExecuteAsync<T>(Message message, ResultProcessor<T> processor, ServerEndPoint server = null)
         {
-            if (message == null) return CompletedTask<T>.Default(asyncState);
+            if (message == null) return ValueTaskResultBox<T>.Default(asyncState);
             multiplexer.CheckMessage(message);
             return multiplexer.ExecuteAsyncImpl<T>(message, processor, asyncState, server);
         }

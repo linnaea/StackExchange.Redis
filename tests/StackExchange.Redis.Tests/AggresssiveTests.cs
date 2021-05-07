@@ -47,8 +47,8 @@ namespace StackExchange.Redis.Tests
                             }
                             else
                             {
-                                await Assert.ThrowsAsync<TaskCanceledException>(() => x).ForAwait();
-                                await Assert.ThrowsAsync<TaskCanceledException>(() => y).ForAwait();
+                                await Assert.ThrowsAsync<TaskCanceledException>(() => x.AsTask()).ForAwait();
+                                await Assert.ThrowsAsync<TaskCanceledException>(() => y.AsTask()).ForAwait();
                             }
                         }
                     });
@@ -109,7 +109,7 @@ namespace StackExchange.Redis.Tests
                 var batch = db.CreateBatch();
                 for (int j = 0; j < tasks.Length; j++)
                 {
-                    tasks[j] = batch.StringIncrementAsync(key);
+                    tasks[j] = batch.StringIncrementAsync(key).AsTask();
                 }
                 batch.Execute();
                 db.Multiplexer.WaitAll(tasks);
@@ -127,7 +127,7 @@ namespace StackExchange.Redis.Tests
                 var batch = db.CreateBatch();
                 for (int j = 0; j < tasks.Length; j++)
                 {
-                    tasks[j] = batch.PingAsync();
+                    tasks[j] = batch.PingAsync().AsTask();
                 }
                 batch.Execute();
                 db.Multiplexer.WaitAll(tasks);
@@ -162,7 +162,7 @@ namespace StackExchange.Redis.Tests
                 var batch = db.CreateBatch();
                 for (int j = 0; j < tasks.Length; j++)
                 {
-                    tasks[j] = batch.StringIncrementAsync(key);
+                    tasks[j] = batch.StringIncrementAsync(key).AsTask();
                 }
                 batch.Execute();
                 for(int j = tasks.Length - 1; j >= 0;j--)
@@ -183,7 +183,7 @@ namespace StackExchange.Redis.Tests
                 var batch = db.CreateBatch();
                 for (int j = 0; j < tasks.Length; j++)
                 {
-                    tasks[j] = batch.PingAsync();
+                    tasks[j] = batch.PingAsync().AsTask();
                 }
                 batch.Execute();
                 for (int j = tasks.Length - 1; j >= 0; j--)
@@ -230,7 +230,7 @@ namespace StackExchange.Redis.Tests
                 batch.AddCondition(Condition.KeyExists(key));
                 for (int j = 0; j < tasks.Length; j++)
                 {
-                    tasks[j] = batch.StringIncrementAsync(key);
+                    tasks[j] = batch.StringIncrementAsync(key).AsTask();
                 }
                 batch.Execute();
                 db.Multiplexer.WaitAll(tasks);
@@ -251,7 +251,7 @@ namespace StackExchange.Redis.Tests
                 batch.AddCondition(Condition.KeyNotExists(key));
                 for (int j = 0; j < tasks.Length; j++)
                 {
-                    tasks[j] = batch.PingAsync();
+                    tasks[j] = batch.PingAsync().AsTask();
                 }
                 batch.Execute();
                 db.Multiplexer.WaitAll(tasks);
@@ -287,7 +287,7 @@ namespace StackExchange.Redis.Tests
                 batch.AddCondition(Condition.KeyExists(key));
                 for (int j = 0; j < tasks.Length; j++)
                 {
-                    tasks[j] = batch.StringIncrementAsync(key);
+                    tasks[j] = batch.StringIncrementAsync(key).AsTask();
                 }
                 await batch.ExecuteAsync().ForAwait();
                 for (int j = tasks.Length - 1; j >= 0; j--)
@@ -311,7 +311,7 @@ namespace StackExchange.Redis.Tests
                 batch.AddCondition(Condition.KeyNotExists(key));
                 for (int j = 0; j < tasks.Length; j++)
                 {
-                    tasks[j] = batch.PingAsync();
+                    tasks[j] = batch.PingAsync().AsTask();
                 }
                 await batch.ExecuteAsync().ForAwait();
                 for (int j = tasks.Length - 1; j >= 0; j--)

@@ -63,20 +63,20 @@ namespace StackExchange.Redis
             }
         }
 
-        internal override Task<T> ExecuteAsync<T>(Message message, ResultProcessor<T> processor, ServerEndPoint server = null)
+        internal override ValueTask<T> ExecuteAsync<T>(Message message, ResultProcessor<T> processor, ServerEndPoint server = null)
         {
-            if (message == null) return CompletedTask<T>.Default(asyncState);
+            if (message == null) return ValueTaskResultBox<T>.Default(asyncState);
             multiplexer.CheckMessage(message);
 
             // prepare the inner command as a task
-            Task<T> task;
+            ValueTask<T> task;
             if (message.IsFireAndForget)
             {
-                task = CompletedTask<T>.Default(null); // F+F explicitly does not get async-state
+                task = default; // F+F explicitly does not get async-state
             }
             else
             {
-                var source = TaskResultBox<T>.Create(out var tcs, asyncState);
+                var source = ValueTaskResultBox<T>.Create(out var tcs, asyncState);
                 task = tcs.Task;
                 message.SetSource(source, processor);
             }

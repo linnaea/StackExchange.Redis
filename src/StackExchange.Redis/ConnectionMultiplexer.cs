@@ -324,19 +324,19 @@ namespace StackExchange.Redis
                     List<Task> tasks = new List<Task>();
                     if ((options & ExportOptions.Info) != 0)
                     {
-                        tasks.Add(api.InfoRawAsync(flags: flags));
+                        tasks.Add(api.InfoRawAsync(flags: flags).AsTask());
                     }
                     if ((options & ExportOptions.Config) != 0)
                     {
-                        tasks.Add(api.ConfigGetAsync(flags: flags));
+                        tasks.Add(api.ConfigGetAsync(flags: flags).AsTask());
                     }
                     if ((options & ExportOptions.Client) != 0)
                     {
-                        tasks.Add(api.ClientListAsync(flags: flags));
+                        tasks.Add(api.ClientListAsync(flags: flags).AsTask());
                     }
                     if ((options & ExportOptions.Cluster) != 0)
                     {
-                        tasks.Add(api.ClusterNodesRawAsync(flags: flags));
+                        tasks.Add(api.ClusterNodesRawAsync(flags: flags).AsTask());
                     }
 
                     WaitAllIgnoreErrors(tasks.ToArray());
@@ -2694,27 +2694,27 @@ namespace StackExchange.Redis
             sentinelConnection?.Dispose();
         }
 
-        internal Task<T> ExecuteAsyncImpl<T>(Message message, ResultProcessor<T> processor, object state, ServerEndPoint server)
+        internal ValueTask<T> ExecuteAsyncImpl<T>(Message message, ResultProcessor<T> processor, object state, ServerEndPoint server)
         {
             if (_isDisposed) throw new ObjectDisposedException(ToString());
 
             if (message == null)
             {
-                return CompletedTask<T>.Default(state);
+                return ValueTaskResultBox<T>.Default(state);
             }
 
-            TaskCompletionSource<T> tcs = null;
+            ValueTaskResultBox<T> tcs = null;
             IResultBox<T> source = null;
             if (!message.IsFireAndForget)
             {
-                source = TaskResultBox<T>.Create(out tcs, state);
+                source = ValueTaskResultBox<T>.Create(out tcs, state);
             }
             var write = TryPushMessageToBridgeAsync(message, processor, source, ref server);
             if (!write.IsCompletedSuccessfully) return ExecuteAsyncImpl_Awaited<T>(this, write, tcs, message, server);
 
             if (tcs == null)
             {
-                return CompletedTask<T>.Default(null); // F+F explicitly does not get async-state
+                return default; // F+F explicitly does not get async-state
             }
             else
             {
@@ -2728,7 +2728,7 @@ namespace StackExchange.Redis
             }
         }
 
-        private static async Task<T> ExecuteAsyncImpl_Awaited<T>(ConnectionMultiplexer @this, ValueTask<WriteResult> write, TaskCompletionSource<T> tcs, Message message, ServerEndPoint server)
+        private static async ValueTask<T> ExecuteAsyncImpl_Awaited<T>(ConnectionMultiplexer @this, ValueTask<WriteResult> write, ValueTaskResultBox<T> tcs, Message message, ServerEndPoint server)
         {
             var result = await write.ForAwait();
             if (result != WriteResult.Success)
@@ -2765,6 +2765,18 @@ namespace StackExchange.Redis
                 source.TrySetException(ex);
                 GC.KeepAlive(source.Task.Exception);
                 GC.SuppressFinalize(source.Task);
+            }
+        }
+
+        internal static void ThrowFailed<T>(ValueTaskResultBox<T> source, Exception unthrownException)
+        {
+            try
+            {
+                throw unthrownException;
+            }
+            catch (Exception ex)
+            {
+                source.TrySetException(ex);
             }
         }
 
@@ -2888,10 +2900,10 @@ namespace StackExchange.Redis
         /// </summary>
         /// <param name="flags">The command flags to use.</param>
         /// <returns>The number of instances known to have received the message (however, the actual number can be higher)</returns>
-        public Task<long> PublishReconfigureAsync(CommandFlags flags = CommandFlags.None)
+        public ValueTask<long> PublishReconfigureAsync(CommandFlags flags = CommandFlags.None)
         {
             byte[] channel = ConfigurationChangedChannel;
-            if (channel == null) return CompletedTask<long>.Default(null);
+            if (channel == null) return ValueTaskResultBox<long>.Default(null);
 
             return GetSubscriber().PublishAsync(channel, RedisLiterals.Wildcard, flags);
         }

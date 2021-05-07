@@ -304,10 +304,10 @@ return timeTaken
                 Assert.Null(beforeTran);
                 var tran = conn.CreateTransaction();
                 {
-                    var a = tran.StringIncrementAsync(key);
-                    var b = tran.ScriptEvaluateAsync("return redis.error_reply('oops')", null, null);
-                    var c = tran.StringIncrementAsync(key);
-                    var complete = tran.ExecuteAsync();
+                    var a = tran.StringIncrementAsync(key).AsTask();
+                    var b = tran.ScriptEvaluateAsync("return redis.error_reply('oops')", null, null).AsTask();
+                    var c = tran.StringIncrementAsync(key).AsTask();
+                    var complete = tran.ExecuteAsync().AsTask();
 
                     Assert.True(muxer.Wait(complete));
                     Assert.True(QuickWait(a).IsCompleted, a.Status.ToString());
@@ -321,7 +321,7 @@ return timeTaken
                     Assert.IsType<RedisServerException>(ex);
                     Assert.Equal("oops", ex.Message);
                 }
-                var afterTran = conn.StringGetAsync(key);
+                var afterTran = conn.StringGetAsync(key).AsTask();
                 Assert.Equal(2L, (long)conn.Wait(afterTran));
             }
         }

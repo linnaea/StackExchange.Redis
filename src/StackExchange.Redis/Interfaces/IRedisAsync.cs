@@ -19,7 +19,7 @@ namespace StackExchange.Redis
         /// <param name="flags">The command flags to use.</param>
         /// <returns>The observed latency.</returns>
         /// <remarks>https://redis.io/commands/ping</remarks>
-        Task<TimeSpan> PingAsync(CommandFlags flags = CommandFlags.None);
+        ValueTask<TimeSpan> PingAsync(CommandFlags flags = CommandFlags.None);
 
         /// <summary>
         /// Wait for a given asynchronous operation to complete (or timeout), reporting which

@@ -137,9 +137,9 @@ namespace StackExchange.Redis.Tests
                 var t1 = db.LockTakeAsync(Key, right, TimeSpan.FromSeconds(20));
                 var t1b = db.LockTakeAsync(Key, wrong, TimeSpan.FromSeconds(10));
                 var t2 = db.LockQueryAsync(Key);
-                var t3 = withTran ? db.LockReleaseAsync(Key, wrong) : null;
+                var t3 = withTran ? db.LockReleaseAsync(Key, wrong).AsTask() : null;
                 var t4 = db.LockQueryAsync(Key);
-                var t5 = withTran ? db.LockExtendAsync(Key, wrong, TimeSpan.FromSeconds(60)) : null;
+                var t5 = withTran ? db.LockExtendAsync(Key, wrong, TimeSpan.FromSeconds(60)).AsTask() : null;
                 var t6 = db.LockQueryAsync(Key);
                 var t7 = db.KeyTimeToLiveAsync(Key);
                 var t8 = db.LockExtendAsync(Key, right, TimeSpan.FromSeconds(60));
@@ -216,9 +216,9 @@ namespace StackExchange.Redis.Tests
                 for (int i = 0; i < LOOP; i++)
                 {
                     _ = db.KeyDeleteAsync(key);
-                    taken = db.LockTakeAsync(key, "new-value", TimeSpan.FromSeconds(10));
-                    newValue = db.StringGetAsync(key);
-                    ttl = db.KeyTimeToLiveAsync(key);
+                    taken = db.LockTakeAsync(key, "new-value", TimeSpan.FromSeconds(10)).AsTask();
+                    newValue = db.StringGetAsync(key).AsTask();
+                    ttl = db.KeyTimeToLiveAsync(key).AsTask();
                 }
                 Assert.True(await taken, "taken");
                 Assert.Equal("new-value", await newValue);

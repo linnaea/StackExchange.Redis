@@ -369,8 +369,8 @@ namespace StackExchange.Redis.Tests
                 Assert.True(success, "tran aborted");
                 Assert.False(setX.IsCanceled, "set x cancelled");
                 Assert.False(setY.IsCanceled, "set y cancelled");
-                var existsX = cluster.KeyExistsAsync(x);
-                var existsY = cluster.KeyExistsAsync(y);
+                var existsX = cluster.KeyExistsAsync(x).AsTask();
+                var existsY = cluster.KeyExistsAsync(y).AsTask();
                 Assert.True(cluster.Wait(existsX), "x exists");
                 Assert.True(cluster.Wait(existsY), "y exists");
             }
@@ -525,7 +525,7 @@ namespace StackExchange.Redis.Tests
                 foreach (var pair in pairs)
                 {
                     expected[index] = pair.Value;
-                    actual[index] = cluster.StringGetAsync(pair.Key);
+                    actual[index] = cluster.StringGetAsync(pair.Key).AsTask();
                     index++;
                 }
                 cluster.WaitAll(actual);

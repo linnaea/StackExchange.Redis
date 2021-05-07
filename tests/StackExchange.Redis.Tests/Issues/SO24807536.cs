@@ -25,7 +25,7 @@ namespace StackExchange.Redis.Tests.Issues
                 // test while exists
                 var keyExists = cache.KeyExists(key);
                 var ttl = cache.KeyTimeToLive(key);
-                var fullWait = cache.HashGetAsync(key, "full", flags: CommandFlags.None);
+                var fullWait = cache.HashGetAsync(key, "full", flags: CommandFlags.None).AsTask();
                 Assert.True(keyExists, "key exists");
                 Assert.NotNull(ttl);
                 Assert.Equal("some value", fullWait.Result);
@@ -36,7 +36,7 @@ namespace StackExchange.Redis.Tests.Issues
                 // test once expired
                 keyExists = cache.KeyExists(key);
                 ttl = cache.KeyTimeToLive(key);
-                fullWait = cache.HashGetAsync(key, "full", flags: CommandFlags.None);
+                fullWait = cache.HashGetAsync(key, "full", flags: CommandFlags.None).AsTask();
 
                 Assert.False(keyExists);
                 Assert.Null(ttl);

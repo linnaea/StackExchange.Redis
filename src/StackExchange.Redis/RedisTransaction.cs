@@ -53,27 +53,27 @@ namespace StackExchange.Redis
             return base.ExecuteSync(msg, proc); // need base to avoid our local "not supported" override
         }
 
-        public Task<bool> ExecuteAsync(CommandFlags flags)
+        public ValueTask<bool> ExecuteAsync(CommandFlags flags)
         {
             var msg = CreateMessage(flags, out ResultProcessor<bool> proc);
             return base.ExecuteAsync(msg, proc); // need base to avoid our local wrapping override
         }
 
-        internal override Task<T> ExecuteAsync<T>(Message message, ResultProcessor<T> processor, ServerEndPoint server = null)
+        internal override ValueTask<T> ExecuteAsync<T>(Message message, ResultProcessor<T> processor, ServerEndPoint server = null)
         {
-            if (message == null) return CompletedTask<T>.Default(asyncState);
+            if (message == null) return ValueTaskResultBox<T>.Default(asyncState);
             multiplexer.CheckMessage(message);
 
             multiplexer.Trace("Wrapping " + message.Command, "Transaction");
             // prepare the inner command as a task
-            Task<T> task;
+            ValueTask<T> task;
             if (message.IsFireAndForget)
             {
-                task = CompletedTask<T>.Default(null); // F+F explicitly does not get async-state
+                task = default; // F+F explicitly does not get async-state
             }
             else
             {
-                var source = TaskResultBox<T>.Create(out var tcs, asyncState);
+                var source = ValueTaskResultBox<T>.Create(out var tcs, asyncState);
                 message.SetSource(source, processor);
                 task = tcs.Task;
             }

@@ -21,17 +21,17 @@ namespace StackExchange.Redis.Tests
                 var server = GetServer(muxer);
                 var key = Me();
                 conn.KeyDelete(key, CommandFlags.FireAndForget);
-                var l0 = server.Features.StringLength ? conn.StringLengthAsync(key) : null;
+                var l0 = server.Features.StringLength ? conn.StringLengthAsync(key).AsTask() : null;
 
                 var s0 = conn.StringGetAsync(key);
 
                 conn.StringSet(key, "abc", flags: CommandFlags.FireAndForget);
                 var s1 = conn.StringGetAsync(key);
-                var l1 = server.Features.StringLength ? conn.StringLengthAsync(key) : null;
+                var l1 = server.Features.StringLength ? conn.StringLengthAsync(key).AsTask() : null;
 
                 var result = conn.StringAppendAsync(key, Encode("defgh"));
                 var s3 = conn.StringGetAsync(key);
-                var l2 = server.Features.StringLength ? conn.StringLengthAsync(key) : null;
+                var l2 = server.Features.StringLength ? conn.StringLengthAsync(key).AsTask() : null;
 
                 Assert.Null((string)await s0);
                 Assert.Equal("abc", await s1);

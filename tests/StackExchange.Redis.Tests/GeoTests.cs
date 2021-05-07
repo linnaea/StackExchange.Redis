@@ -191,7 +191,7 @@ namespace StackExchange.Redis.Tests
                 var ex = Assert.Throws<ArgumentException>(() => db.GeoRadius(key, -1.759925, 52.19493, GeoUnit.Miles, 500, Order.Ascending, GeoRadiusOptions.WithDistance));
                 Assert.StartsWith("Member should not be a double, you likely want the GeoRadius(RedisKey, double, double, ...) overload.", ex.Message);
                 Assert.Equal("member", ex.ParamName);
-                ex = await Assert.ThrowsAsync<ArgumentException>(() => db.GeoRadiusAsync(key, -1.759925, 52.19493, GeoUnit.Miles, 500, Order.Ascending, GeoRadiusOptions.WithDistance)).ForAwait();
+                ex = await Assert.ThrowsAsync<ArgumentException>(() => db.GeoRadiusAsync(key, -1.759925, 52.19493, GeoUnit.Miles, 500, Order.Ascending, GeoRadiusOptions.WithDistance).AsTask()).ForAwait();
                 Assert.StartsWith("Member should not be a double, you likely want the GeoRadius(RedisKey, double, double, ...) overload.", ex.Message);
                 Assert.Equal("member", ex.ParamName);
 

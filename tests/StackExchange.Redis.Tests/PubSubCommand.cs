@@ -43,17 +43,17 @@ namespace StackExchange.Redis.Tests
                 RedisChannel channel = Me() + Guid.NewGuid();
                 var server = conn.GetServer(conn.GetEndPoints()[0]);
 
-                var channels = await server.SubscriptionChannelsAsync(Me() + "*").WithTimeout(2000);
+                var channels = await server.SubscriptionChannelsAsync(Me() + "*").AsTask().WithTimeout(2000);
                 Assert.DoesNotContain(channel, channels);
 
-                _ = await server.SubscriptionPatternCountAsync().WithTimeout(2000);
-                var count = await server.SubscriptionSubscriberCountAsync(channel).WithTimeout(2000);
+                _ = await server.SubscriptionPatternCountAsync().AsTask().WithTimeout(2000);
+                var count = await server.SubscriptionSubscriberCountAsync(channel).AsTask().WithTimeout(2000);
                 Assert.Equal(0, count);
                 await conn.GetSubscriber().SubscribeAsync(channel, delegate { }).WithTimeout(2000);
-                count = await server.SubscriptionSubscriberCountAsync(channel).WithTimeout(2000);
+                count = await server.SubscriptionSubscriberCountAsync(channel).AsTask().WithTimeout(2000);
                 Assert.Equal(1, count);
 
-                channels = await server.SubscriptionChannelsAsync(Me() + "*").WithTimeout(2000);
+                channels = await server.SubscriptionChannelsAsync(Me() + "*").AsTask().WithTimeout(2000);
                 Assert.Contains(channel, channels);
             }
         }

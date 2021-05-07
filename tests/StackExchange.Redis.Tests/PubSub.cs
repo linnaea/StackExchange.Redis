@@ -179,8 +179,8 @@ namespace StackExchange.Redis.Tests
             {
                 // both use async because we want to drain the completion managers, and the only
                 // way to prove that is to use TPL objects
-                var t1 = sub.PingAsync();
-                var t2 = pub.PingAsync();
+                var t1 = sub.PingAsync().AsTask();
+                var t2 = pub.PingAsync().AsTask();
                 await Task.Delay(100).ForAwait(); // especially useful when testing any-order mode
 
                 if (!Task.WaitAll(new[] { t1, t2 }, muxer.TimeoutMilliseconds * 2)) throw new TimeoutException();
@@ -284,7 +284,7 @@ namespace StackExchange.Redis.Tests
             var withAsync = Stopwatch.StartNew();
             for (int i = 0; i < loop; i++)
             {
-                tasks[i] = conn.PublishAsync(channel, "bar");
+                tasks[i] = conn.PublishAsync(channel, "bar").AsTask();
             }
             conn.WaitAll(tasks);
             withAsync.Stop();
@@ -627,10 +627,10 @@ namespace StackExchange.Redis.Tests
                 var b1 = sub.SubscribeAsync(prefix + "b*r", handler);
                 await Task.WhenAll(a0, a1, b0, b1).ForAwait();
 
-                var c = sub.PublishAsync(prefix + "foo", "foo");
-                var d = sub.PublishAsync(prefix + "f@o", "f@o");
-                var e = sub.PublishAsync(prefix + "bar", "bar");
-                var f = sub.PublishAsync(prefix + "b@r", "b@r");
+                var c = sub.PublishAsync(prefix + "foo", "foo").AsTask();
+                var d = sub.PublishAsync(prefix + "f@o", "f@o").AsTask();
+                var e = sub.PublishAsync(prefix + "bar", "bar").AsTask();
+                var f = sub.PublishAsync(prefix + "b@r", "b@r").AsTask();
                 await Task.WhenAll(c, d, e, f).ForAwait();
 
                 long total = c.Result + d.Result + e.Result + f.Result;

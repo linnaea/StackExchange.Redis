@@ -21,7 +21,7 @@ namespace StackExchange.Redis
         /// </summary>
         /// <param name="channel">The channel to identify the server endpoint by.</param>
         /// <param name="flags">The command flags to use.</param>
-        Task<EndPoint> IdentifyEndpointAsync(RedisChannel channel, CommandFlags flags = CommandFlags.None);
+        ValueTask<EndPoint> IdentifyEndpointAsync(RedisChannel channel, CommandFlags flags = CommandFlags.None);
 
         /// <summary>
         /// Indicates whether the instance can communicate with the server;
@@ -50,7 +50,7 @@ namespace StackExchange.Redis
         /// <param name="flags">The command flags to use.</param>
         /// <returns>the number of clients that received the message.</returns>
         /// <remarks>https://redis.io/commands/publish</remarks>
-        Task<long> PublishAsync(RedisChannel channel, RedisValue message, CommandFlags flags = CommandFlags.None);
+        ValueTask<long> PublishAsync(RedisChannel channel, RedisValue message, CommandFlags flags = CommandFlags.None);
 
         /// <summary>
         /// Subscribe to perform some operation when a message to the preferred/active node is broadcast, without any guarantee of ordered handling.

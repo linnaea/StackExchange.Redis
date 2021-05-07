@@ -23,7 +23,7 @@ namespace StackExchange.Redis.Tests.Issues
                 {
                     string iKey = prefix + i;
                     conn.StringSetAsync(iKey, iKey);
-                    last = conn.SetAddAsync(key, iKey);
+                    last = conn.SetAddAsync(key, iKey).AsTask();
                 }
                 conn.Wait(last);
             }
@@ -46,7 +46,7 @@ namespace StackExchange.Redis.Tests.Issues
                 while (Volatile.Read(ref keepChecking) == 1)
                 {
                     throttle.Wait(); // acquire
-                    var x = conn.SetPopAsync(key).ContinueWith(task =>
+                    var x = conn.SetPopAsync(key).AsTask().ContinueWith(task =>
                     {
                         throttle.Release();
                         if (task.IsCompleted)
@@ -57,7 +57,7 @@ namespace StackExchange.Redis.Tests.Issues
                             }
                             else
                             {
-                                last = conn.KeyDeleteAsync((string)task.Result);
+                                last = conn.KeyDeleteAsync((string)task.Result).AsTask();
                             }
                         }
                     });

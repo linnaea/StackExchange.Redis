@@ -235,7 +235,8 @@ namespace StackExchange.Redis
             public void CompleteTask(short token)
             {
                 if (!TransitionState(token, SlotStatus.Completing, SlotStatus.Completed))
-                    throw new InvalidOperationException();
+                    if (!TransitionState(token, SlotStatus.Running, SlotStatus.Completed))
+                        throw new InvalidOperationException();
 
                 var continuation = Interlocked.Exchange(ref _continuation[token], CompletedValueTask.CompletionSentinel);
                 var execContext = _execContext[token];

@@ -10,15 +10,20 @@ namespace StackExchange.Redis
     {
         private static readonly object staticLock = new object();
         private static volatile PerformanceCounter _cpu;
-        private static volatile bool _disabled = !RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+        private static volatile bool _disabled;
+
+        [DllImport("libc", EntryPoint = "getloadavg")]
+        private static extern unsafe int GetLoadAverage(double* loadavg, int nelem);
 
         public static bool TryGetSystemCPU(out float value)
         {
             value = -1;
+            if (_disabled)
+                return false;
 
             try
             {
-                if (!_disabled && _cpu == null)
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && _cpu == null)
                 {
                     lock (staticLock)
                     {
@@ -28,6 +33,23 @@ namespace StackExchange.Redis
 
                             // First call always returns 0, so get that out of the way.
                             _cpu.NextValue();
+                        }
+                    }
+                }
+                else
+                {
+                    unsafe
+                    {
+                        var load1 = 0.0;
+                        if (GetLoadAverage(&load1, 1) < 1)
+                        {
+                            _disabled = true;
+                            return false;
+                        }
+                        else
+                        {
+                            value = (float) load1 * 100 / Environment.ProcessorCount;
+                            return true;
                         }
                     }
                 }

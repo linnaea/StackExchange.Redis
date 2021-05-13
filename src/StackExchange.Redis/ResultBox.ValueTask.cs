@@ -6,10 +6,10 @@ using System.Threading.Tasks.Sources;
 
 namespace StackExchange.Redis
 {
-    internal sealed class ValueTaskResultBox<T> : IResultBox<T>
+    internal sealed partial class ValueTaskResultBox<T> : IResultBox<T>
     {
-        private readonly short _token;
-        private readonly ValueTaskSource _source;
+        private short _token;
+        private ValueTaskSource _source;
         private bool _taskCreated;
 
         public ValueTask<T> Task
@@ -24,15 +24,16 @@ namespace StackExchange.Redis
             }
         }
 
-        private ValueTaskResultBox(ValueTaskSource source, short token)
-        {
-            _source = source;
-            _token = token;
-        }
+        private ValueTaskResultBox() { }
 
         bool IResultBox.IsAsync => true;
 
-        bool IResultBox.IsFaulted => _source.GetStatus(_token) == ValueTaskSourceStatus.Faulted;
+        bool IResultBox.IsFaulted => _source.GetStatus(_token) switch
+        {
+            ValueTaskSourceStatus.Faulted => true,
+            ValueTaskSourceStatus.Canceled => true,
+            _ => false
+        };
 
         void IResultBox.Cancel() => _source.TrySetException(_token, SimpleResultBox.CancelledException, false);
 
@@ -40,11 +41,25 @@ namespace StackExchange.Redis
 
         void IResultBox<T>.SetResult(T value) => _source.TrySetResult(_token, value, false);
 
-        T IResultBox<T>.GetResult(out Exception ex, bool _) => _source.PeekResult(_token, out ex);
+        T IResultBox<T>.GetResult(out Exception ex, bool canRecycle)
+        {
+            var r = _source.PeekResult(_token, out ex);
+            if (canRecycle)
+            {
+                _source.CompleteTask(_token);
+                BoxPool.Return(this);
+            }
+
+            return r;
+        }
 
         public bool TrySetException(Exception ex) => _source.TrySetException(_token, ex ?? SimpleResultBox.CancelledException);
 
-        void IResultBox.ActivateContinuations() => _source.CompleteTask(_token);
+        void IResultBox.ActivateContinuations()
+        {
+            _source.CompleteTask(_token);
+            BoxPool.Return(this);
+        }
 
         public static IResultBox<T> Create(out ValueTaskResultBox<T> task, object asyncState)
         {
@@ -57,7 +72,10 @@ namespace StackExchange.Redis
             if (ConnectionMultiplexer.PreventThreadTheft)
                 source.MarkForceAsyncContinuation(token);
 
-            return task = new ValueTaskResultBox<T>(source, token);
+            task = BoxPool.Get();
+            task._source = source;
+            task._token = token;
+            return task;
         }
 
         public static ValueTask<T> Default(object asyncState) => Completed(default, asyncState);
@@ -69,9 +87,69 @@ namespace StackExchange.Redis
             return new ValueTask<T>(source, token);
         }
 
-        private class ValueTaskSource : IValueTaskSource<T>
+        private static class BoxPool
         {
-            private static ValueTaskSource _pool = new ValueTaskSource(16);
+            private const int TsStackSize = 5;
+            private const int SharedPoolSize = 13;
+            private static ValueTaskResultBox<T>[] TsStack => _tsStack ??= new ValueTaskResultBox<T>[TsStackSize];
+
+            // ReSharper disable StaticMemberInGenericType
+            [ThreadStatic] private static ValueTaskResultBox<T>[] _tsStack;
+            [ThreadStatic] private static int _tsCount;
+            private static readonly ValueTaskResultBox<T>[] sharedPool = new ValueTaskResultBox<T>[SharedPoolSize];
+            // ReSharper restore StaticMemberInGenericType
+
+            public static void Return(ValueTaskResultBox<T> v)
+            {
+                if (_tsCount < TsStackSize)
+                {
+                    TsStack[_tsCount++] = v;
+                    return;
+                }
+
+                for (var i = 0; i < SharedPoolSize; i++)
+                {
+                    if (sharedPool[i] != null)
+                        continue;
+
+                    sharedPool[i] = v;
+                    return;
+                }
+            }
+
+            public static ValueTaskResultBox<T> Get()
+            {
+                var b = _tsCount > 0 ? TsStack[--_tsCount] : null;
+
+                if (b == null)
+                {
+                    for (var i = 0; i < SharedPoolSize; i++)
+                    {
+                        var inst = sharedPool[i];
+                        if (inst == null)
+                            continue;
+
+                        if (inst != Interlocked.CompareExchange(ref sharedPool[i], null, inst))
+                            continue;
+
+                        b = inst;
+                        break;
+                    }
+                }
+
+                if (b == null)
+                    return new ValueTaskResultBox<T>();
+
+                b._source = null;
+                b._taskCreated = false;
+                b._token = short.MinValue;
+                return b;
+            }
+        }
+
+        private partial class ValueTaskSource : IValueTaskSource<T>
+        {
+            private static ValueTaskSource _pool = new ValueTaskSource(13);
             private const int ForceAsynchronousContinuation = 0x100;
 
             private readonly ExecutionContext[] _execContext;
@@ -105,12 +183,16 @@ namespace StackExchange.Redis
 
             public void MarkForceAsyncContinuation(short token)
             {
+#if NET5_0_OR_GREATER
+                Interlocked.Or(ref _status[token], ForceAsynchronousContinuation);
+#else
                 int s, next;
                 do
                 {
                     s = _status[token];
                     next = s | ForceAsynchronousContinuation;
                 } while (Interlocked.CompareExchange(ref _status[token], next, s) != s);
+#endif
             }
 
             public ValueTaskSourceStatus GetStatus(short token)
@@ -157,16 +239,11 @@ namespace StackExchange.Redis
                 }
 
                 var forceAsync = (_status[token] & ForceAsynchronousContinuation) == ForceAsynchronousContinuation;
-                if (ReferenceEquals(_continuation[token], CompletedValueTask.CompletionSentinel))
-                {
-                    ScheduleContinuation(continuation, state, syncContext, forceAsync,
-                                         (flags & ValueTaskSourceOnCompletedFlags.FlowExecutionContext) != 0);
-                    return;
-                }
 
+                ExecutionContext execContext = null;
                 _syncContext[token] = syncContext;
                 if ((flags & ValueTaskSourceOnCompletedFlags.FlowExecutionContext) != 0)
-                    _execContext[token] = ExecutionContext.Capture();
+                    _execContext[token] = execContext = ExecutionContext.Capture();
 
                 var oldContinuation = _continuation[token];
                 if (oldContinuation == null)
@@ -181,8 +258,7 @@ namespace StackExchange.Redis
                 if (!ReferenceEquals(oldContinuation, CompletedValueTask.CompletionSentinel))
                     throw new InvalidOperationException();
 
-                ScheduleContinuation(continuation, state, syncContext, forceAsync,
-                                     (flags & ValueTaskSourceOnCompletedFlags.FlowExecutionContext) != 0);
+                ScheduleContinuation(continuation, state, syncContext, forceAsync, execContext);
             }
 
             public T GetResult(short token)
@@ -247,60 +323,7 @@ namespace StackExchange.Redis
                 if (continuation == null || ReferenceEquals(continuation, CompletedValueTask.CompletionSentinel))
                     return;
 
-                if (execContext != null)
-                {
-                    ExecutionContext.Run(execContext, ScheduleContinuationInEc,
-                                         Tuple.Create(continuation, asyncState, syncContext, forceAsync));
-                }
-                else
-                {
-                    ScheduleContinuation(continuation, asyncState, syncContext, forceAsync, false);
-                }
-            }
-
-            private static void ScheduleContinuation(Action<object> continuation, object asyncState,
-                                                     object syncContext, bool forceAsync, bool keepEc)
-            {
-                var threadPoolQueue = keepEc
-                                          ? new Func<WaitCallback, object, bool>(ThreadPool.QueueUserWorkItem)
-                                          : ThreadPool.UnsafeQueueUserWorkItem;
-
-                if (syncContext is null)
-                    threadPoolQueue(new WaitCallback(continuation), asyncState);
-                else if (forceAsync)
-                    threadPoolQueue(InvokeContinuation, Tuple.Create(continuation, asyncState, syncContext));
-                else
-                    InvokeContinuation(continuation, asyncState, syncContext);
-            }
-
-            private static void ScheduleContinuationInEc(object icp)
-            {
-                var cp = (Tuple<Action<object>, object, object, bool>) icp;
-                ScheduleContinuation(cp.Item1, cp.Item2, cp.Item3, cp.Item4, true);
-            }
-
-            private static void InvokeContinuation(object icp)
-            {
-                var cp = (Tuple<Action<object>, object, object>) icp;
-                InvokeContinuation(cp.Item1, cp.Item2, cp.Item3);
-            }
-
-            private static void InvokeContinuation(Action<object> continuation, object asyncState, object syncContext)
-            {
-                switch (syncContext)
-                {
-                case TaskScheduler ts:
-                    System.Threading.Tasks.Task.Factory.StartNew(continuation, asyncState, CancellationToken.None,
-                                                                 TaskCreationOptions.DenyChildAttach, ts);
-                    break;
-                case SynchronizationContext sc:
-                    sc.Post(continuationParameters =>
-                    {
-                        var cp = (Tuple<Action<object>, object>) continuationParameters;
-                        cp.Item1(cp.Item2);
-                    }, Tuple.Create(continuation, asyncState));
-                    break;
-                }
+                ScheduleContinuation(continuation, asyncState, syncContext, forceAsync, execContext);
             }
 
             private void InvalidateSlot(short token)

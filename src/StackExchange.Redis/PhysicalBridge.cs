@@ -15,6 +15,18 @@ namespace StackExchange.Redis
 {
     internal sealed class PhysicalBridge : IDisposable
     {
+        /* design decision/choice; the code works fine either way, but if this is
+         * set to *true*, then when we can't take the writer-lock *right away*,
+         * we push the message to the backlog (starting a worker if needed)
+         *
+         * otherwise, we go for a TryWaitAsync and rely on the await machinery
+         *
+         * "true" seems to give faster times *when under heavy contention*, based on profiling
+         * but it involves the backlog concept; "false" works well under low contention, and
+         * makes more use of async
+         */
+        private const bool ALWAYS_USE_BACKLOG_IF_CANNOT_GET_SYNC_LOCK = true;
+
         internal readonly string Name;
 
         private const int ProfileLogSamples = 10;
@@ -239,7 +251,7 @@ namespace StackExchange.Redis
                 queue = Channel.CreateUnbounded<PendingSubscriptionState>(s_subscriptionQueueOptions);
                 var existing = Interlocked.CompareExchange(ref _subscriptionBackgroundQueue, queue, null);
 
-                if (existing != null) return existing; // we didn't win, but that's fine 
+                if (existing != null) return existing; // we didn't win, but that's fine
 
                 // we won (_subqueue is now queue)
                 // this means we have a new channel without a reader; let's fix that!
@@ -717,7 +729,8 @@ namespace StackExchange.Redis
                 {
                     // we can't get it *instantaneously*; is there
                     // perhaps a backlog and active backlog processor?
-                    if (PushToBacklog(message, onlyIfExists: true)) return WriteResult.Success; // queued counts as success
+                    if (PushToBacklog(message, onlyIfExists: !message.IsFireAndForget || !ALWAYS_USE_BACKLOG_IF_CANNOT_GET_SYNC_LOCK))
+                        return WriteResult.Success; // queued counts as success
 
                     // no backlog... try to wait with the timeout;
                     // if we *still* can't get it: that counts as
@@ -914,7 +927,7 @@ namespace StackExchange.Redis
                 _backlogStatus = BacklogStatus.Faulted;
             }
             finally
-            {   
+            {
                 token.Dispose();
             }
         }
@@ -934,18 +947,6 @@ namespace StackExchange.Redis
         /// <param name="message">The message to be written.</param>
         internal ValueTask<WriteResult> WriteMessageTakingWriteLockAsync(PhysicalConnection physical, Message message)
         {
-            /* design decision/choice; the code works fine either way, but if this is
-             * set to *true*, then when we can't take the writer-lock *right away*,
-             * we push the message to the backlog (starting a worker if needed)
-             *
-             * otherwise, we go for a TryWaitAsync and rely on the await machinery
-             *
-             * "true" seems to give faster times *when under heavy contention*, based on profiling
-             * but it involves the backlog concept; "false" works well under low contention, and
-             * makes more use of async
-             */
-            const bool ALWAYS_USE_BACKLOG_IF_CANNOT_GET_SYNC_LOCK = true;
-
             Trace("Writing: " + message);
             message.SetEnqueued(physical); // this also records the read/write stats at this point
 
@@ -988,7 +989,7 @@ namespace StackExchange.Redis
 
                     result = flush.Result; // we know it was completed, this is fine
                 }
-                
+
                 physical.SetIdle();
 
                 return new ValueTask<WriteResult>(result);
@@ -1036,7 +1037,7 @@ namespace StackExchange.Redis
                     {
                         result = await physical.FlushAsync(false).ForAwait();
                     }
-                    
+
                     physical.SetIdle();
 
 #if DEBUG
@@ -1211,7 +1212,7 @@ namespace StackExchange.Redis
                 {
                     // If we are executing AUTH, it means we are still unauthenticated
                     // Setting READONLY before AUTH always fails but we think it succeeded since
-                    // we run it as Fire and Forget. 
+                    // we run it as Fire and Forget.
                     if (cmd != RedisCommand.AUTH)
                     {
                         var readmode = connection.GetReadModeCommand(isMasterOnly);

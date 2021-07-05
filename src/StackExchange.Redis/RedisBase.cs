@@ -61,7 +61,7 @@ namespace StackExchange.Redis
             return new RedisFeatures(version);
         }
 
-        protected void WhenAlwaysOrExists(When when)
+        protected static void WhenAlwaysOrExists(When when)
         {
             switch (when)
             {
@@ -73,7 +73,7 @@ namespace StackExchange.Redis
             }
         }
 
-        protected void WhenAlwaysOrExistsOrNotExists(When when)
+        protected static void WhenAlwaysOrExistsOrNotExists(When when)
         {
             switch (when)
             {
@@ -86,7 +86,7 @@ namespace StackExchange.Redis
             }
         }
 
-        protected void WhenAlwaysOrNotExists(When when)
+        protected static void WhenAlwaysOrNotExists(When when)
         {
             switch (when)
             {
@@ -102,9 +102,9 @@ namespace StackExchange.Redis
         {
             // do the best we can with available commands
             var map = multiplexer.CommandMap;
-            if(map.IsAvailable(RedisCommand.PING))
+            if (map.IsAvailable(RedisCommand.PING))
                 return ResultProcessor.TimingProcessor.CreateMessage(-1, flags, RedisCommand.PING);
-            if(map.IsAvailable(RedisCommand.TIME))
+            if (map.IsAvailable(RedisCommand.TIME))
                 return ResultProcessor.TimingProcessor.CreateMessage(-1, flags, RedisCommand.TIME);
             if (map.IsAvailable(RedisCommand.ECHO))
                 return ResultProcessor.TimingProcessor.CreateMessage(-1, flags, RedisCommand.ECHO, RedisLiterals.PING);

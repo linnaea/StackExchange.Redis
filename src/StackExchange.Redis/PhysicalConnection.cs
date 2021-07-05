@@ -98,7 +98,7 @@ namespace StackExchange.Redis
             Trace("Connecting...");
             _socket = SocketManager.CreateSocket(endpoint);
             bridge.Multiplexer.OnConnecting(endpoint, bridge.ConnectionType);
-            log?.WriteLine($"BeginConnect: {Format.ToString(endpoint)}");
+            log?.WriteLine($"{Format.ToString(endpoint)}: BeginConnectAsync");
 
             CancellationTokenSource timeoutSource = null;
             try
@@ -142,7 +142,7 @@ namespace StackExchange.Redis
                         }
                         else if (await ConnectedAsync(x, log, bridge.Multiplexer.SocketManager).ForAwait())
                         {
-                            log?.WriteLine("Starting read");
+                            log?.WriteLine($"{Format.ToString(endpoint)}: Starting read");
                             try
                             {
                                 StartReading();
@@ -162,7 +162,7 @@ namespace StackExchange.Redis
                     }
                     catch (ObjectDisposedException)
                     {
-                        log?.WriteLine("(socket shutdown)");
+                        log?.WriteLine($"{Format.ToString(endpoint)}: (socket shutdown)");
                         try { RecordConnectionFailed(ConnectionFailureType.UnableToConnect, isInitialConnect: true); }
                         catch (Exception inner)
                         {
@@ -180,13 +180,9 @@ namespace StackExchange.Redis
                     }
                 }
             }
-            catch (NotImplementedException ex)
+            catch (NotImplementedException ex) when (!(endpoint is IPEndPoint))
             {
-                if (!(endpoint is IPEndPoint))
-                {
-                    throw new InvalidOperationException("BeginConnect failed with NotImplementedException; consider using IP endpoints, or enable ResolveDns in the configuration", ex);
-                }
-                throw;
+                throw new InvalidOperationException("BeginConnect failed with NotImplementedException; consider using IP endpoints, or enable ResolveDns in the configuration", ex);
             }
             finally
             {
@@ -344,11 +340,11 @@ namespace StackExchange.Redis
                         exMessage.Append(" (").Append(sc.ShutdownKind);
                         if (sc.SocketError != SocketError.Success)
                         {
-                            exMessage.Append("/").Append(sc.SocketError);
+                            exMessage.Append('/').Append(sc.SocketError);
                         }
                         if (sc.BytesRead == 0) exMessage.Append(", 0-read");
                         if (sc.BytesSent == 0) exMessage.Append(", 0-sent");
-                        exMessage.Append(", last-recv: ").Append(sc.LastReceived).Append(")");
+                        exMessage.Append(", last-recv: ").Append(sc.LastReceived).Append(')');
                     }
                     else if (pipe is IMeasuredDuplexPipe mdp)
                     {
@@ -369,8 +365,8 @@ namespace StackExchange.Redis
                     {
                         if (bridge != null)
                         {
-                            exMessage.Append(" on ").Append(Format.ToString(bridge.ServerEndPoint?.EndPoint)).Append("/").Append(connectionType)
-                                .Append(", ").Append(_writeStatus).Append("/").Append(_readStatus)
+                            exMessage.Append(" on ").Append(Format.ToString(bridge.ServerEndPoint?.EndPoint)).Append('/').Append(connectionType)
+                                .Append(", ").Append(_writeStatus).Append('/').Append(_readStatus)
                                 .Append(", last: ").Append(bridge.LastCommand);
 
                             data.Add(Tuple.Create("FailureType", failureType.ToString()));
@@ -850,6 +846,7 @@ namespace StackExchange.Redis
             return WriteCrlf(span, offset);
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "DEBUG uses instance data")]
         private async ValueTask<WriteResult> FlushAsync_Awaited(PhysicalConnection connection, ValueTask<FlushResult> flush, bool throwOnFailure
 #if DEBUG
             , int startFlush, long flushBytes
@@ -875,6 +872,7 @@ namespace StackExchange.Redis
 
         CancellationTokenSource _reusableFlushSyncTokenSource;
         [Obsolete("this is an anti-pattern; work to reduce reliance on this is in progress")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0062:Make local function 'static'", Justification = "DEBUG uses instance data")]
         internal WriteResult FlushSync(bool throwOnFailure, int millisecondsTimeout)
         {
             var cts = _reusableFlushSyncTokenSource ??= new CancellationTokenSource();
@@ -889,13 +887,9 @@ namespace StackExchange.Redis
                     // here lies the evil
                     flush.AsTask().Wait();
                 }
-                catch (AggregateException ex)
+                catch (AggregateException ex) when (ex.InnerExceptions.Any(e => e is TaskCanceledException))
                 {
-                    if (ex.InnerExceptions.Any(e => e is TaskCanceledException))
-                    {
-                        ThrowTimeout();
-                    }
-                    throw;
+                    ThrowTimeout();
                 }
                 finally
                 {
@@ -1258,7 +1252,7 @@ namespace StackExchange.Redis
             return VolatileSocket?.Available ?? -1;
         }
 
-        private RemoteCertificateValidationCallback GetAmbientIssuerCertificateCallback()
+        private static RemoteCertificateValidationCallback GetAmbientIssuerCertificateCallback()
         {
             try
             {
@@ -1354,7 +1348,7 @@ namespace StackExchange.Redis
 
                 _ioPipe = pipe;
 
-                log?.WriteLine($"Connected {bridge}");
+                log?.WriteLine($"{bridge?.Name}: Connected ");
 
                 await bridge.OnConnectedAsync(this, log).ForAwait();
                 return true;
@@ -1769,9 +1763,7 @@ namespace StackExchange.Redis
             if (!line.HasValue) return RawResult.Nil; // incomplete line
 
             int count = 0;
-#pragma warning disable IDE0059
             foreach (var _ in line.GetInlineTokenizer()) count++;
-#pragma warning restore IDE0059
             var block = arena.Allocate(count);
 
             var iter = block.GetEnumerator();

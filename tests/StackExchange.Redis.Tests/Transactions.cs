@@ -1135,7 +1135,7 @@ namespace StackExchange.Redis.Tests
 
                 var tran = db.CreateTransaction();
                 var cond = tran.AddCondition(condition);
-                var push = tran.StringSetAsync(key, "any value");
+                var push = tran.StringSetAsync(key, "any value").AsTask();
                 var exec = tran.ExecuteAsync();
                 var get = db.StringLength(key);
 

@@ -286,6 +286,11 @@ namespace StackExchange.Redis.KeyspaceIsolation
             return Inner.ListLeftPopAsync(ToInner(key), flags);
         }
 
+        public ValueTask<RedisValue[]> ListLeftPopAsync(RedisKey key, long count, CommandFlags flags = CommandFlags.None)
+        {
+            return Inner.ListLeftPopAsync(ToInner(key), count, flags);
+        }
+
         public ValueTask<long> ListLeftPushAsync(RedisKey key, RedisValue[] values, CommandFlags flags = CommandFlags.None)
         {
             return Inner.ListLeftPushAsync(ToInner(key), values, flags);
@@ -319,6 +324,11 @@ namespace StackExchange.Redis.KeyspaceIsolation
         public ValueTask<RedisValue> ListRightPopAsync(RedisKey key, CommandFlags flags = CommandFlags.None)
         {
             return Inner.ListRightPopAsync(ToInner(key), flags);
+        }
+
+        public ValueTask<RedisValue[]> ListRightPopAsync(RedisKey key, long count, CommandFlags flags = CommandFlags.None)
+        {
+            return Inner.ListRightPopAsync(ToInner(key), count, flags);
         }
 
         public ValueTask<RedisValue> ListRightPopLeftPushAsync(RedisKey source, RedisKey destination, CommandFlags flags = CommandFlags.None)
@@ -820,6 +830,11 @@ namespace StackExchange.Redis.KeyspaceIsolation
         public ValueTask<RedisValue> StringGetSetAsync(RedisKey key, RedisValue value, CommandFlags flags = CommandFlags.None)
         {
             return Inner.StringGetSetAsync(ToInner(key), value, flags);
+        }
+
+        public ValueTask<RedisValue> StringGetDeleteAsync(RedisKey key, CommandFlags flags = CommandFlags.None)
+        {
+            return Inner.StringGetDeleteAsync(ToInner(key), flags);
         }
 
         public ValueTask<RedisValueWithExpiry> StringGetWithExpiryAsync(RedisKey key, CommandFlags flags = CommandFlags.None)

@@ -922,10 +922,22 @@ namespace StackExchange.Redis
             return ExecuteSync(msg, ResultProcessor.RedisValue);
         }
 
+        public RedisValue[] ListLeftPop(RedisKey key, long count, CommandFlags flags = CommandFlags.None)
+        {
+            var msg = Message.Create(Database, flags, RedisCommand.LPOP, key, count);
+            return ExecuteSync(msg, ResultProcessor.RedisValueArray);
+        }
+
         public ValueTask<RedisValue> ListLeftPopAsync(RedisKey key, CommandFlags flags = CommandFlags.None)
         {
             var msg = Message.Create(Database, flags, RedisCommand.LPOP, key);
             return ExecuteAsync(msg, ResultProcessor.RedisValue);
+        }
+
+        public ValueTask<RedisValue[]> ListLeftPopAsync(RedisKey key, long count, CommandFlags flags = CommandFlags.None)
+        {
+            var msg = Message.Create(Database, flags, RedisCommand.LPOP, key, count);
+            return ExecuteAsync(msg, ResultProcessor.RedisValueArray);
         }
 
         public long ListLeftPush(RedisKey key, RedisValue value, When when = When.Always, CommandFlags flags = CommandFlags.None)
@@ -1016,10 +1028,22 @@ namespace StackExchange.Redis
             return ExecuteSync(msg, ResultProcessor.RedisValue);
         }
 
+        public RedisValue[] ListRightPop(RedisKey key, long count, CommandFlags flags = CommandFlags.None)
+        {
+            var msg = Message.Create(Database, flags, RedisCommand.RPOP, key, count);
+            return ExecuteSync(msg, ResultProcessor.RedisValueArray);
+        }
+
         public ValueTask<RedisValue> ListRightPopAsync(RedisKey key, CommandFlags flags = CommandFlags.None)
         {
             var msg = Message.Create(Database, flags, RedisCommand.RPOP, key);
             return ExecuteAsync(msg, ResultProcessor.RedisValue);
+        }
+
+        public ValueTask<RedisValue[]> ListRightPopAsync(RedisKey key, long count, CommandFlags flags = CommandFlags.None)
+        {
+            var msg = Message.Create(Database, flags, RedisCommand.RPOP, key, count);
+            return ExecuteAsync(msg, ResultProcessor.RedisValueArray);
         }
 
         public RedisValue ListRightPopLeftPush(RedisKey source, RedisKey destination, CommandFlags flags = CommandFlags.None)
@@ -2476,6 +2500,18 @@ namespace StackExchange.Redis
         public ValueTask<RedisValue> StringGetSetAsync(RedisKey key, RedisValue value, CommandFlags flags = CommandFlags.None)
         {
             var msg = Message.Create(Database, flags, RedisCommand.GETSET, key, value);
+            return ExecuteAsync(msg, ResultProcessor.RedisValue);
+        }
+
+        public RedisValue StringGetDelete(RedisKey key, CommandFlags flags = CommandFlags.None)
+        {
+            var msg = Message.Create(Database, flags, RedisCommand.GETDEL, key);
+            return ExecuteSync(msg, ResultProcessor.RedisValue);
+        }
+
+        public ValueTask<RedisValue> StringGetDeleteAsync(RedisKey key, CommandFlags flags = CommandFlags.None)
+        {
+            var msg = Message.Create(Database, flags, RedisCommand.GETDEL, key);
             return ExecuteAsync(msg, ResultProcessor.RedisValue);
         }
 
